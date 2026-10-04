@@ -1,5 +1,11 @@
 # Scientific Calculator (Engineered from First Principles)
 
+[![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen?style=for-the-badge&logo=github)](https://saltymother.github.io/scientific-calculator/)
+[![Status](https://img.shields.io/badge/Status-Deployed%20%26%20Verified-success?style=for-the-badge)](https://saltymother.github.io/scientific-calculator/)
+
+> 🌐 **Live Web Application**: [https://saltymother.github.io/scientific-calculator/](https://saltymother.github.io/scientific-calculator/)  
+> Fully responsive for both desktop workstations and mobile smartphones/tablets.
+
 A precision scientific calculator built from **basic mathematical fundamentals**, completely from scratch. It avoids relying on pre-baked trigonometric library wrappers or lookup tables, computing every operation from core mathematical definitions.
 
 ---
