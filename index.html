@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scientific Calculator (First Principles)</title>
+  <style>
+    :root {
+      --bg-color: #0f141c;
+      --card-bg: rgba(26, 34, 48, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-amber: #f59e0b;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+      --btn-bg: #1e293b;
+      --btn-hover: #334155;
+      --btn-fn-bg: #1e2638;
+      --btn-fn-hover: #2d3b55;
+      --btn-op-bg: #312e81;
+      --btn-op-hover: #4338ca;
+      --btn-eq-bg: #2563eb;
+      --btn-eq-hover: #1d4ed8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --lcd-bg: #090d16;
+      --font-mono: 'SF Mono', Monaco, Menlo, 'Courier New', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 60%, #080d1a 100%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .calculator-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 960px;
+      gap: 20px;
+    }
+
+    @media (min-width: 860px) {
+      .calculator-container {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+    }
+
+    /* Calculator Main Unit */
+    .calculator-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.1);
+      flex: 1.2;
+    }
+
+    /* Display */
+    .display-screen {
+      background: var(--lcd-bg);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .mode-badges {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mode-badge {
+      background: #1e293b;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-badge.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    }
+
+    .history-line {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      text-align: right;
+      min-height: 1.3rem;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .input-line {
+      font-family: var(--font-mono);
+      font-size: 1.8rem;
+      color: var(--text-main);
+      text-align: right;
+      min-height: 2.4rem;
+      overflow-x: auto;
+      white-space: nowrap;
+      margin-top: 4px;
+    }
+
+    /* Keypads */
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    button.btn {
+      background: var(--btn-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      font-size: 1.05rem;
+      font-weight: 500;
+      padding: 13px 4px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      outline: none;
+      touch-action: manipulation;
+    }
+
+    button.btn:hover {
+      background: var(--btn-hover);
+      transform: translateY(-1px);
+    }
+
+    button.btn:active {
+      transform: translateY(1px);
+      filter: brightness(0.9);
+    }
+
+    button.btn-fn {
+      background: var(--btn-fn-bg);
+      color: #93c5fd;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    button.btn-fn:hover {
+      background: var(--btn-fn-hover);
+      color: #bfdbfe;
+    }
+
+    button.btn-op {
+      background: var(--btn-op-bg);
+      color: #e0e7ff;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    button.btn-op:hover {
+      background: var(--btn-op-hover);
+    }
+
+    button.btn-accent {
+      background: #7c2d12;
+      color: #fed7aa;
+    }
+
+    button.btn-accent:hover {
+      background: #9a3412;
+    }
+
+    button.btn-equals {
+      background: var(--btn-eq-bg);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
+
+    button.btn-equals:hover {
+      background: var(--btn-eq-hover);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.6);
+    }
+
+    /* Explanation / Inspector Panel */
+    .inspector-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      flex: 1.1;
+      display: flex;
+      flex-direction: column;
+      max-height: 640px;
+      overflow-y: auto;
+    }
+
+    .inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .inspector-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-tag {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      font-weight: 600;
+    }
+
+    .info-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+    }
+
+    .info-box h4 {
+      color: #cbd5e1;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .math-formula {
+      font-family: var(--font-mono);
+      background: #0f172a;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: #38bdf8;
+      font-size: 0.82rem;
+      overflow-x: auto;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    /* Table */
+    .convergence-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      margin-top: 6px;
+    }
+
+    .convergence-table th {
+      text-align: left;
+      padding: 6px 8px;
+      background: #1e293b;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .convergence-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+    }
+
+    .convergence-table tr:hover td {
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Scientific Calculator</h1>
+  <p>Engineered from First Principles (Taylor Series, Newton-Raphson, Machin Pi)</p>
+</header>
+
+<div class="calculator-container">
+  <!-- Left Side: Calculator Core -->
+  <div class="calculator-card">
+    <div class="display-screen">
+      <div class="status-bar">
+        <div class="mode-badges">
+          <span class="mode-badge active" id="degBadge" onclick="setAngleMode('DEG')">DEG</span>
+          <span class="mode-badge" id="radBadge" onclick="setAngleMode('RAD')">RAD</span>
+        </div>
+        <span id="memIndicator">M: 0</span>
+      </div>
+      <div class="history-line" id="historyDisplay">&nbsp;</div>
+      <div class="input-line" id="mainDisplay">0</div>
+    </div>
+
+    <div class="keypad-grid">
+      <!-- Row 1: Trigonometric -->
+      <button class="btn btn-fn" onclick="insertFunc('sin(')">sin</button>
+      <button class="btn btn-fn" onclick="insertFunc('cos(')">cos</button>
+      <button class="btn btn-fn" onclick="insertFunc('tan(')">tan</button>
+      <button class="btn btn-fn" onclick="insertFunc('asin(')">sin⁻¹</button>
+      <button class="btn btn-fn" onclick="insertFunc('acos(')">cos⁻¹</button>
+
+      <!-- Row 2: Inverse & Hyperbolic -->
+      <button class="btn btn-fn" onclick="insertFunc('atan(')">tan⁻¹</button>
+      <button class="btn btn-fn" onclick="insertFunc('sinh(')">sinh</button>
+      <button class="btn btn-fn" onclick="insertFunc('cosh(')">cosh</button>
+      <button class="btn btn-fn" onclick="insertFunc('tanh(')">tanh</button>
+      <button class="btn btn-fn" onclick="insertFunc('fact(')">n!</button>
+
+      <!-- Row 3: Roots, Powers & Logs -->
+      <button class="btn btn-fn" onclick="insertFunc('sqrt(')">√x</button>
+      <button class="btn btn-fn" onclick="insertFunc('cbrt(')">∛x</button>
+      <button class="btn btn-fn" onclick="insertOp('^')">xʸ</button>
+      <button class="btn btn-fn" onclick="insertFunc('ln(')">ln</button>
+      <button class="btn btn-fn" onclick="insertFunc('log(')">log₁₀</button>
+
+      <!-- Row 4: Constants & Controls -->
+      <button class="btn btn-fn" onclick="insertConst('pi')">π</button>
+      <button class="btn btn-fn" onclick="insertConst('e')">e</button>
+      <button class="btn btn-accent" onclick="clearAll()">AC</button>
+      <button class="btn btn-accent" onclick="backspace()">⌫</button>
+      <button class="btn btn-op" onclick="insertOp('/')">÷</button>
+
+      <!-- Row 5: Numbers 7, 8, 9, Operators -->
+      <button class="btn" onclick="insertNum('7')">7</button>
+      <button class="btn" onclick="insertNum('8')">8</button>
+      <button class="btn" onclick="insertNum('9')">9</button>
+      <button class="btn btn-op" onclick="insertSymbol('(')">(</button>
+      <button class="btn btn-op" onclick="insertOp('*')">×</button>
+
+      <!-- Row 6: Numbers 4, 5, 6, Operators -->
+      <button class="btn" onclick="insertNum('4')">4</button>
+      <button class="btn" onclick="insertNum('5')">5</button>
+      <button class="btn" onclick="insertNum('6')">6</button>
+      <button class="btn btn-op" onclick="insertSymbol(')')">)</button>
+      <button class="btn btn-op" onclick="insertOp('-')">−</button>
+
+      <!-- Row 7: Numbers 1, 2, 3, Operators -->
+      <button class="btn" onclick="insertNum('1')">1</button>
+      <button class="btn" onclick="insertNum('2')">2</button>
+      <button class="btn" onclick="insertNum('3')">3</button>
+      <button class="btn btn-fn" onclick="insertConst('ans')">Ans</button>
+      <button class="btn btn-op" onclick="insertOp('+')">+</button>
+
+      <!-- Row 8: 0, ., ±, %, = -->
+      <button class="btn" onclick="insertNum('0')">0</button>
+      <button class="btn" onclick="insertNum('.')">.</button>
+      <button class="btn btn-fn" onclick="toggleNegation()">±</button>
+      <button class="btn btn-fn" onclick="insertOp('%')">%</button>
+      <button class="btn btn-equals" onclick="computeResult()">=</button>
+    </div>
+  </div>
+
+  <!-- Right Side: Fundamentals & Convergence Inspector -->
+  <div class="inspector-card">
+    <div class="inspector-header">
+      <div class="inspector-title">
+        <span>Fundamentals Inspector</span>
+      </div>
+      <span class="pill-tag">First Principles</span>
+    </div>
+
+    <div id="inspectorContent">
+      <div class="info-box">
+        <h4>How calculations work here</h4>
+        <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
+          This calculator does not use pre-baked trigonometric lookup tables or library wrappers.
+          Every function is calculated from <strong>fundamental mathematical definitions</strong>:
+        </p>
+        <ul style="margin-left: 20px; margin-top: 8px; color: #cbd5e1; font-size: 0.82rem; line-height: 1.6;">
+          <li><strong>sin(x), cos(x):</strong> Maclaurin/Taylor polynomial series with angle reduction modulo 2π.</li>
+          <li><strong>tan(x):</strong> Fundamental quotient identity sin(x)/cos(x) with pole asymptote detection.</li>
+          <li><strong>√x:</strong> Newton-Raphson quadratic root iterations: x_{k+1} = ½(x_k + S/x_k).</li>
+          <li><strong>π &amp; e:</strong> Machin's arctangent formula &amp; Euler's sum of reciprocals of factorials.</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <h4>Try it out!</h4>
+        <p style="color: var(--text-muted); font-size: 0.82rem;">
+          Calculate any expression (e.g. <code>sin(45)</code>, <code>cos(60)</code>, <code>tan(45)</code>, <code>sqrt(2)</code>, or <code>ln(10)</code>) to see the step-by-step series convergence breakdown right here!
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">
+  Pure first-principles algorithms • Keyboard friendly (Enter to compute, Esc to clear, Backspace to delete)
+</div>
+
+<script>
+/* =======================================================================
+   First Principles Scientific Math Engine in JavaScript
+   ======================================================================= */
+
+// 1. Fundamental Constants computed from scratch
+function computeMachinPi() {
+  function arctanSeries(x, terms = 25) {
+    let x2 = x * x;
+    let xPow = x;
+    let sum = 0.0;
+    let sign = 1.0;
+    for (let n = 0; n < terms; n++) {
+      let term = sign * (xPow / (2 * n + 1));
+      sum += term;
+      xPow *= x2;
+      sign = -sign;
+      if (Math.abs(term) < 1e-17) break;
+    }
+    return sum;
+  }
+  return 16.0 * arctanSeries(1.0 / 5.0) - 4.0 * arctanSeries(1.0 / 239.0);
+}
+
+function computeEulerE() {
+  let sum = 1.0;
+  let term = 1.0;
+  for (let n = 1; n < 30; n++) {
+    term /= n;
+    sum += term;
+    if (term < 1e-17) break;
+  }
+  return sum;
+}
+
+function computeLn2() {
+  let y = 1.0 / 3.0;
+  let y2 = y * y;
+  let yPow = y;
+  let sum = 0.0;
+  for (let k = 0; k < 25; k++) {
+    let term = yPow / (2 * k + 1);
+    sum += term;
+    yPow *= y2;
+    if (term < 1e-17) break;
+  }
+  return 2.0 * sum;
+}
+
+const PI = computeMachinPi();
+const TWO_PI = 2.0 * PI;
+const HALF_PI = PI / 2.0;
+const E = computeEulerE();
+const LN2 = computeLn2();
+
+// 2. Trigonometry & Series
+function reduceAngle(rad) {
+  let rem = rad % TWO_PI;
+  if (rem > PI) rem -= TWO_PI;
+  else if (rem < -PI) rem += TWO_PI;
+  return rem;
+}
+
+function firstPrinciplesSin(x, isDeg = true) {
+  let rad = isDeg ? x * (PI / 180.0) : x;
+  let effective = reduceAngle(rad);
+  let sign = 1.0;
+
+  if (effective > HALF_PI) {
+    effective = PI - effective;
+  } else if (effective < -HALF_PI) {
+    effective = -PI - effective;
+  }
+
+  let sum = 0.0;
+  let term = effective;
+  let x2 = effective * effective;
+
+  for (let n = 0; n < 40; n++) {
+    sum += term;
+    let k = 2 * n + 1;
+    term = -term * x2 / ((k + 1) * (k + 2));
+    if (Math.abs(term) < 1e-16) break;
+  }
+  return sum;
+}
+
+function firstPrinciplesCos(x, isDeg = true) {
+  let rad = isDeg ? x * (PI / 180.0) : x;
+  let effective = reduceAngle(rad);
+  let sign = 1.0;
+
+  if (effective > HALF_PI) {
+    effective = PI - effective;
+    sign = -1.0;
+  } else if (effective < -HALF_PI) {
+    effective = -PI - effective;
+    sign = -1.0;
+  }
+
+  let sum = 0.0;
+  let term = 1.0;
+  let x2 = effective * effective;
+
+  for (let n = 0; n < 40; n++) {
+    sum += term;
+    let k = 2 * n;
+    term = -term * x2 / ((k + 1) * (k + 2));
+    if (Math.abs(term) < 1e-16) break;
+  }
+  return sign * sum;
+}
+
+function firstPrinciplesTan(x, isDeg = true) {
+  let c = firstPrinciplesCos(x, isDeg);
+  if (Math.abs(c) < 1e-15) {
+    throw new Error("tan(" + x + (isDeg ? "°" : " rad") + ") is undefined (asymptote)");
+  }
+  return firstPrinciplesSin(x, isDeg) / c;
+}
+
+function firstPrinciplesAtan(x) {
+  if (x === 0.0) return 0.0;
+  if (Math.abs(x) > 1.0) {
+    let sign = x > 0 ? 1.0 : -1.0;
+    return sign * HALF_PI - firstPrinciplesAtan(1.0 / x);
+  }
+  if (Math.abs(x) > 0.5) {
+    let reduced = x / (1.0 + firstPrinciplesSqrt(1.0 + x * x));
+    return 2.0 * firstPrinciplesAtan(reduced);
+  }
+
+  let sum = 0.0;
+  let x2 = x * x;
+  let xPow = x;
+  let sign = 1.0;
+  for (let n = 0; n < 50; n++) {
+    let term = sign * xPow / (2 * n + 1);
+    sum += term;
+    xPow *= x2;
+    sign = -sign;
+    if (Math.abs(term) < 1e-16) break;
+  }
+  return sum;
+}
+
+function firstPrinciplesAsin(x) {
+  if (x < -1.0 || x > 1.0) throw new Error("asin(x) requires x in [-1, 1]");
+  if (x === 1.0) return HALF_PI;
+  if (x === -1.0) return -HALF_PI;
+  return firstPrinciplesAtan(x / firstPrinciplesSqrt(1.0 - x * x));
+}
+
+function firstPrinciplesAcos(x) {
+  return HALF_PI - firstPrinciplesAsin(x);
+}
+
+function firstPrinciplesSqrt(x) {
+  if (x < 0) throw new Error("Square root of negative number is not real");
+  if (x === 0) return 0.0;
+  let guess = x < 1.0 ? x : x * 0.5;
+  if (guess === 0.0) guess = 1e-8;
+
+  for (let i = 0; i < 60; i++) {
+    let next = 0.5 * (guess + x / guess);
+    if (Math.abs(next - guess) <= 1e-15 * Math.abs(guess)) return next;
+    guess = next;
+  }
+  return guess;
+}
+
+function firstPrinciplesCbrt(x) {
+  if (x === 0) return 0.0;
+  let neg = x < 0;
+  let val = neg ? -x : x;
+  let guess = val > 1.0 ? val * 0.5 : 1.0;
+
+  for (let i = 0; i < 60; i++) {
+    let next = (2.0 * guess + val / (guess * guess)) / 3.0;
+    if (Math.abs(next - guess) <= 1e-15 * Math.abs(guess)) {
+      return neg ? -next : next;
+    }
+    guess = next;
+  }
+  return neg ? -guess : guess;
+}
+
+function firstPrinciplesExp(x) {
+  if (x === 0.0) return 1.0;
+  if (x > 709.0) throw new Error("exp(x) overflow");
+  if (x < -708.0) return 0.0;
+
+  let k = Math.round(x / LN2);
+  let r = x - k * LN2;
+
+  let sum = 1.0;
+  let term = 1.0;
+  for (let n = 1; n < 50; n++) {
+    term = term * r / n;
+    sum += term;
+    if (Math.abs(term) < 1e-16) break;
+  }
+  return sum * Math.pow(2.0, k);
+}
+
+function firstPrinciplesLn(x) {
+  if (x <= 0) throw new Error("ln(x) requires x > 0");
+  let k = 0;
+  let m = x;
+  while (m > 1.0) { m /= 2.0; k++; }
+  while (m < 0.5) { m *= 2.0; k--; }
+
+  let y = (m - 1.0) / (m + 1.0);
+  let y2 = y * y;
+  let yPow = y;
+  let sum = 0.0;
+
+  for (let n = 0; n < 40; n++) {
+    let term = yPow / (2 * n + 1);
+    sum += term;
+    yPow *= y2;
+    if (Math.abs(term) < 1e-16) break;
+  }
+  return k * LN2 + 2.0 * sum;
+}
+
+const LN10 = firstPrinciplesLn(10.0);
+
+function firstPrinciplesLog10(x) {
+  return firstPrinciplesLn(x) / LN10;
+}
+
+function firstPrinciplesFact(n) {
+  if (n < 0 || Math.floor(n) !== n) throw new Error("Factorial requires non-negative integer");
+  if (n > 170) throw new Error("Factorial overflow");
+  let res = 1;
+  for (let i = 2; i <= n; i++) res *= i;
+  return res;
+}
+
+/* =======================================================================
+   Shunting-Yard Infix Parser & Evaluator
+   ======================================================================= */
+
+const OP_INFO = {
+  '+': { prec: 2, assoc: 'L', args: 2 },
+  '-': { prec: 2, assoc: 'L', args: 2 },
+  '*': { prec: 3, assoc: 'L', args: 2 },
+  '/': { prec: 3, assoc: 'L', args: 2 },
+  '%': { prec: 3, assoc: 'L', args: 2 },
+  '^': { prec: 5, assoc: 'R', args: 2 },
+  'u-': { prec: 4, assoc: 'R', args: 1 },
+  'u+': { prec: 4, assoc: 'R', args: 1 }
+};
+
+const KNOWN_FUNCS = {
+  'sin': 1, 'cos': 1, 'tan': 1,
+  'asin': 1, 'acos': 1, 'atan': 1,
+  'sinh': 1, 'cosh': 1, 'tanh': 1,
+  'sqrt': 1, 'cbrt': 1, 'ln': 1, 'log': 1, 'log10': 1,
+  'exp': 1, 'abs': 1, 'fact': 1
+};
+
+function tokenize(expr, variables) {
+  let raw = [];
+  let i = 0;
+  let n = expr.length;
+
+  while (i < n) {
+    let ch = expr[i];
+    if (/\s/.test(ch)) { i++; continue; }
+
+    if (/\d/.test(ch) || (ch === '.' && i + 1 < n && /\d/.test(expr[i + 1]))) {
+      let start = i;
+      let hasDot = false;
+      while (i < n && (/\d/.test(expr[i]) || (expr[i] === '.' && !hasDot))) {
+        if (expr[i] === '.') hasDot = true;
+        i++;
+      }
+      if (i < n && (expr[i] === 'e' || expr[i] === 'E')) {
+        if (i + 1 < n && (/\d/.test(expr[i + 1]) || ((expr[i + 1] === '+' || expr[i + 1] === '-') && i + 2 < n && /\d/.test(expr[i + 2])))) {
+          i++;
+          if (expr[i] === '+' || expr[i] === '-') i++;
+          while (i < n && /\d/.test(expr[i])) i++;
+        }
+      }
+      raw.push({ type: 'NUMBER', val: parseFloat(expr.slice(start, i)) });
+      continue;
+    }
+
+    if (/[a-zA-Z_]/.test(ch)) {
+      let start = i;
+      while (i < n && /[a-zA-Z0-9_]/.test(expr[i])) i++;
+      let word = expr.slice(start, i).toLowerCase();
+      if (word in KNOWN_FUNCS) {
+        raw.push({ type: 'FUNC', val: word });
+      } else if (word === 'pi') {
+        raw.push({ type: 'CONST', val: PI });
+      } else if (word === 'e') {
+        raw.push({ type: 'CONST', val: E });
+      } else if (word in variables) {
+        raw.push({ type: 'VAR', val: variables[word] });
+      } else {
+        throw new Error("Unknown identifier: " + word);
+      }
+      continue;
+    }
+
+    if (ch === '(') { raw.push({ type: 'LPAREN', val: '(' }); i++; }
+    else if (ch === ')') { raw.push({ type: 'RPAREN', val: ')' }); i++; }
+    else if (ch === ',') { raw.push({ type: 'COMMA', val: ',' }); i++; }
+    else if ('+-*/^%'.includes(ch)) { raw.push({ type: 'OP', val: ch }); i++; }
+    else if (ch === '!') { raw.push({ type: 'FUNC', val: 'fact' }); i++; }
+    else throw new Error("Unexpected character: " + ch);
+  }
+
+  // Handle unary minus and implicit multiplication
+  let processed = [];
+  for (let idx = 0; idx < raw.length; idx++) {
+    let curr = raw[idx];
+    let prev = idx > 0 ? raw[idx - 1] : null;
+
+    if (curr.type === 'OP' && (curr.val === '+' || curr.val === '-')) {
+      if (!prev || ['OP', 'LPAREN', 'COMMA'].includes(prev.type)) {
+        curr = { type: 'OP', val: curr.val === '-' ? 'u-' : 'u+' };
+      }
+    }
+
+    if (prev) {
+      let prevVal = ['NUMBER', 'CONST', 'VAR', 'RPAREN'].includes(prev.type);
+      let currValOrFn = ['NUMBER', 'CONST', 'VAR', 'FUNC', 'LPAREN'].includes(curr.type);
+      if (prevVal && currValOrFn && curr.type !== 'OP') {
+        processed.push({ type: 'OP', val: '*' });
+      }
+    }
+
+    processed.push(curr);
+  }
+
+  return processed;
+}
+
+function parseShuntingYard(tokens) {
+  let output = [];
+  let opStack = [];
+
+  for (let t of tokens) {
+    if (['NUMBER', 'CONST', 'VAR'].includes(t.type)) {
+      output.push(t);
+    } else if (t.type === 'FUNC') {
+      opStack.push(t);
+    } else if (t.type === 'COMMA') {
+      while (opStack.length && opStack[opStack.length - 1].type !== 'LPAREN') {
+        output.push(opStack.pop());
+      }
+    } else if (t.type === 'OP') {
+      let o1 = t.val;
+      let o1Info = OP_INFO[o1];
+      while (opStack.length) {
+        let top = opStack[opStack.length - 1];
+        if (top.type === 'OP') {
+          let o2Info = OP_INFO[top.val];
+          if ((o1Info.assoc === 'L' && o1Info.prec <= o2Info.prec) ||
+              (o1Info.assoc === 'R' && o1Info.prec < o2Info.prec)) {
+            output.push(opStack.pop());
+          } else break;
+        } else if (top.type === 'FUNC') {
+          output.push(opStack.pop());
+        } else break;
+      }
+      opStack.push(t);
+    } else if (t.type === 'LPAREN') {
+      opStack.push(t);
+    } else if (t.type === 'RPAREN') {
+      while (opStack.length && opStack[opStack.length - 1].type !== 'LPAREN') {
+        output.push(opStack.pop());
+      }
+      if (!opStack.length) throw new Error("Mismatched parentheses");
+      opStack.pop();
+      if (opStack.length && opStack[opStack.length - 1].type === 'FUNC') {
+        output.push(opStack.pop());
+      }
+    }
+  }
+
+  while (opStack.length) {
+    let top = opStack.pop();
+    if (top.type === 'LPAREN' || top.type === 'RPAREN') throw new Error("Mismatched parentheses");
+    output.push(top);
+  }
+  return output;
+}
+
+function evaluateRPN(rpn, angleMode) {
+  let stack = [];
+  let isDeg = (angleMode === 'DEG');
+
+  for (let t of rpn) {
+    if (t.type === 'NUMBER' || t.type === 'CONST' || t.type === 'VAR') {
+      stack.push(t.val);
+    } else if (t.type === 'OP') {
+      let op = t.val;
+      let info = OP_INFO[op];
+      if (info.args === 1) {
+        let val = stack.pop();
+        stack.push(op === 'u-' ? -val : val);
+      } else if (info.args === 2) {
+        let b = stack.pop();
+        let a = stack.pop();
+        if (op === '+') stack.push(a + b);
+        else if (op === '-') stack.push(a - b);
+        else if (op === '*') stack.push(a * b);
+        else if (op === '/') {
+          if (b === 0) throw new Error("Division by zero");
+          stack.push(a / b);
+        } else if (op === '%') {
+          if (b === 0) throw new Error("Modulo by zero");
+          stack.push(a % b);
+        } else if (op === '^') {
+          if (b === Math.floor(b) && b >= 0) stack.push(Math.pow(a, b));
+          else if (a > 0) stack.push(firstPrinciplesExp(b * firstPrinciplesLn(a)));
+          else throw new Error("Complex power");
+        }
+      }
+    } else if (t.type === 'FUNC') {
+      let fn = t.val;
+      let arg = stack.pop();
+      if (fn === 'sin') stack.push(firstPrinciplesSin(arg, isDeg));
+      else if (fn === 'cos') stack.push(firstPrinciplesCos(arg, isDeg));
+      else if (fn === 'tan') stack.push(firstPrinciplesTan(arg, isDeg));
+      else if (fn === 'asin') {
+        let r = firstPrinciplesAsin(arg);
+        stack.push(isDeg ? r * (180.0 / PI) : r);
+      } else if (fn === 'acos') {
+        let r = firstPrinciplesAcos(arg);
+        stack.push(isDeg ? r * (180.0 / PI) : r);
+      } else if (fn === 'atan') {
+        let r = firstPrinciplesAtan(arg);
+        stack.push(isDeg ? r * (180.0 / PI) : r);
+      } else if (fn === 'sinh') {
+        let ep = firstPrinciplesExp(arg);
+        stack.push((ep - 1.0 / ep) / 2.0);
+      } else if (fn === 'cosh') {
+        let ep = firstPrinciplesExp(arg);
+        stack.push((ep + 1.0 / ep) / 2.0);
+      } else if (fn === 'tanh') {
+        let e2x = firstPrinciplesExp(2.0 * arg);
+        stack.push((e2x - 1.0) / (e2x + 1.0));
+      } else if (fn === 'sqrt') stack.push(firstPrinciplesSqrt(arg));
+      else if (fn === 'cbrt') stack.push(firstPrinciplesCbrt(arg));
+      else if (fn === 'ln') stack.push(firstPrinciplesLn(arg));
+      else if (fn === 'log' || fn === 'log10') stack.push(firstPrinciplesLog10(arg));
+      else if (fn === 'exp') stack.push(firstPrinciplesExp(arg));
+      else if (fn === 'abs') stack.push(Math.abs(arg));
+      else if (fn === 'fact') stack.push(firstPrinciplesFact(arg));
+    }
+  }
+
+  if (stack.length !== 1) throw new Error("Syntax error");
+  let res = stack[0];
+  if (Math.abs(res) < 1e-15) res = 0.0;
+  return res;
+}
+
+/* =======================================================================
+   UI State & Controller
+   ======================================================================= */
+let currentExpr = '';
+let currentAngleMode = 'DEG';
+let variables = { ans: 0.0 };
+let memoryVal = 0.0;
+
+function updateDisplay() {
+  const display = document.getElementById('mainDisplay');
+  display.textContent = currentExpr || '0';
+}
+
+function setAngleMode(mode) {
+  currentAngleMode = mode;
+  document.getElementById('degBadge').classList.toggle('active', mode === 'DEG');
+  document.getElementById('radBadge').classList.toggle('active', mode === 'RAD');
+}
+
+function insertNum(n) {
+  currentExpr += n;
+  updateDisplay();
+}
+
+function insertOp(op) {
+  if (currentExpr === '' && variables.ans !== 0.0) {
+    currentExpr = 'ans';
+  }
+  currentExpr += op;
+  updateDisplay();
+}
+
+function insertFunc(fn) {
+  currentExpr += fn;
+  updateDisplay();
+}
+
+function insertConst(c) {
+  currentExpr += c;
+  updateDisplay();
+}
+
+function insertSymbol(s) {
+  currentExpr += s;
+  updateDisplay();
+}
+
+function backspace() {
+  currentExpr = currentExpr.slice(0, -1);
+  updateDisplay();
+}
+
+function clearAll() {
+  currentExpr = '';
+  document.getElementById('historyDisplay').innerHTML = '&nbsp;';
+  updateDisplay();
+}
+
+function toggleNegation() {
+  if (!currentExpr) {
+    currentExpr = '-';
+  } else {
+    currentExpr = '-(' + currentExpr + ')';
+  }
+  updateDisplay();
+}
+
+function computeResult() {
+  if (!currentExpr.trim()) return;
+
+  const rawExpr = currentExpr;
+  try {
+    const tokens = tokenize(rawExpr, variables);
+    const rpn = parseShuntingYard(tokens);
+    const result = evaluateRPN(rpn, currentAngleMode);
+
+    document.getElementById('historyDisplay').textContent = rawExpr + ' =';
+    let formatted = Math.abs(result - Math.round(result)) < 1e-12 ? Math.round(result).toString() : result.toPrecision(12).replace(/\.?0+$/, '');
+    currentExpr = formatted;
+    variables.ans = result;
+    updateDisplay();
+
+    // Trigger Inspector Explanation
+    renderInspector(rawExpr, result);
+  } catch (err) {
+    document.getElementById('mainDisplay').textContent = 'Error: ' + err.message;
+  }
+}
+
+/* =======================================================================
+   Fundamentals Inspector Rendering
+   ======================================================================= */
+function renderInspector(expr, result) {
+  const container = document.getElementById('inspectorContent');
+  const match = expr.match(/^\s*([a-zA-Z]+)\s*\(\s*([^)]+)\s*\)\s*$/);
+
+  if (!match) {
+    container.innerHTML = `
+      <div class="info-box">
+        <h4>Expression Evaluation</h4>
+        <div class="math-formula">${expr} = ${result}</div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">
+          Parsed via <strong>Dijkstra's Shunting-Yard algorithm</strong> into Reverse Polish Notation (RPN), resolving operator precedence and functions from first principles.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  const fnName = match[1].toLowerCase();
+  const argStr = match[2];
+  let argVal = 0;
+  try {
+    argVal = evaluateRPN(parseShuntingYard(tokenize(argStr, variables)), currentAngleMode);
+  } catch (e) {
+    argVal = parseFloat(argStr);
+  }
+
+  if (fnName === 'sin') {
+    let rad = currentAngleMode === 'DEG' ? argVal * (PI / 180.0) : argVal;
+    let eff = reduceAngle(rad);
+    let note = "";
+    if (eff > HALF_PI) { eff = PI - eff; note = "Quadrant II: sin(π - x) = sin(x)"; }
+    else if (eff < -HALF_PI) { eff = -PI - eff; note = "Quadrant III/IV: sin(-π - x) = -sin(x)"; }
+
+    let rows = '';
+    let total = 0.0;
+    let term = eff;
+    let eff2 = eff * eff;
+    for (let n = 0; n < 8; n++) {
+      total += term;
+      let k = 2 * n + 1;
+      rows += `<tr><td>n = ${n}</td><td>${term >= 0 ? '+' : ''}${term.toFixed(8)}</td><td>${total.toFixed(8)}</td></tr>`;
+      if (Math.abs(term) < 1e-15) break;
+      term = -term * eff2 / ((k + 1) * (k + 2));
+    }
+
+    container.innerHTML = `
+      <div class="info-box">
+        <h4>Fundamental Trigonometric Series: SIN</h4>
+        <div class="math-formula">sin(x) = x - x³/3! + x⁵/5! - x⁷/7! + ...</div>
+        <div style="font-size: 0.82rem; margin-top: 8px; color: #94a3b8;">
+          Input: <strong>${argVal}${currentAngleMode === 'DEG' ? '°' : ' rad'}</strong> &bull; Radian: <strong>${rad.toFixed(6)}</strong><br>
+          ${note ? '<span style="color:#38bdf8;">' + note + '</span><br>' : ''}
+          Series variable x = <strong>${eff.toFixed(6)}</strong>
+        </div>
+        <table class="convergence-table">
+          <thead><tr><th>Term</th><th>Value</th><th>Cumulative Sum</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top: 10px; font-weight: 600; color: #34d399;">Result: ${result}</div>
+      </div>
+    `;
+  } else if (fnName === 'cos') {
+    let rad = currentAngleMode === 'DEG' ? argVal * (PI / 180.0) : argVal;
+    let eff = reduceAngle(rad);
+    let sign = 1.0;
+    let note = "";
+    if (eff > HALF_PI) { eff = PI - eff; sign = -1.0; note = "Using cos(π - x) = -cos(x)"; }
+    else if (eff < -HALF_PI) { eff = -PI - eff; sign = -1.0; note = "Using cos(-π - x) = -cos(x)"; }
+
+    let rows = '';
+    let total = 0.0;
+    let term = 1.0;
+    let eff2 = eff * eff;
+    for (let n = 0; n < 8; n++) {
+      total += term;
+      let k = 2 * n;
+      rows += `<tr><td>n = ${n}</td><td>${(sign*term) >= 0 ? '+' : ''}${(sign*term).toFixed(8)}</td><td>${(sign*total).toFixed(8)}</td></tr>`;
+      if (Math.abs(term) < 1e-15) break;
+      term = -term * eff2 / ((k + 1) * (k + 2));
+    }
+
+    container.innerHTML = `
+      <div class="info-box">
+        <h4>Fundamental Trigonometric Series: COS</h4>
+        <div class="math-formula">cos(x) = 1 - x²/2! + x⁴/4! - x⁶/6! + ...</div>
+        <div style="font-size: 0.82rem; margin-top: 8px; color: #94a3b8;">
+          Input: <strong>${argVal}${currentAngleMode === 'DEG' ? '°' : ' rad'}</strong> &bull; Radian: <strong>${rad.toFixed(6)}</strong><br>
+          ${note ? '<span style="color:#38bdf8;">' + note + '</span><br>' : ''}
+          Series variable x = <strong>${eff.toFixed(6)}</strong>
+        </div>
+        <table class="convergence-table">
+          <thead><tr><th>Term</th><th>Value</th><th>Cumulative Sum</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top: 10px; font-weight: 600; color: #34d399;">Result: ${result}</div>
+      </div>
+    `;
+  } else if (fnName === 'tan') {
+    let s = firstPrinciplesSin(argVal, currentAngleMode === 'DEG');
+    let c = firstPrinciplesCos(argVal, currentAngleMode === 'DEG');
+    container.innerHTML = `
+      <div class="info-box">
+        <h4>Fundamental Quotient Identity: TAN</h4>
+        <div class="math-formula">tan(θ) = sin(θ) / cos(θ)</div>
+        <div style="font-size: 0.85rem; margin-top: 10px; line-height: 1.6; color: #cbd5e1;">
+          sin(${argVal}) = <strong>${s.toFixed(10)}</strong><br>
+          cos(${argVal}) = <strong>${c.toFixed(10)}</strong><br>
+          Quotient = ${s.toFixed(10)} / ${c.toFixed(10)} = <strong>${result}</strong>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 8px;">
+          Both numerator and denominator are independently computed via Maclaurin polynomial series.
+        </p>
+      </div>
+    `;
+  } else if (fnName === 'sqrt') {
+    let guess = argVal < 1.0 ? argVal : argVal * 0.5;
+    if (guess === 0) guess = 1e-8;
+    let rows = '';
+    for (let i = 0; i < 7; i++) {
+      let next = 0.5 * (guess + argVal / guess);
+      let err = Math.abs(next * next - argVal);
+      rows += `<tr><td>${i + 1}</td><td>${next.toFixed(10)}</td><td>${err.toExponential(3)}</td></tr>`;
+      if (Math.abs(next - guess) <= 1e-15 * Math.abs(guess)) break;
+      guess = next;
+    }
+
+    container.innerHTML = `
+      <div class="info-box">
+        <h4>Newton-Raphson Quadratic Iteration: √${argVal}</h4>
+        <div class="math-formula">x_{k+1} = 0.5 * (x_k + S / x_k)</div>
+        <table class="convergence-table">
+          <thead><tr><th>Iter</th><th>Guess</th><th>Error |x² - S|</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top: 10px; font-weight: 600; color: #34d399;">Result: ${result}</div>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <div class="info-box">
+        <h4>Function Evaluation: ${fnName.toUpperCase()}</h4>
+        <div class="math-formula">${fnName}(${argVal}) = ${result}</div>
+        <p style="color: var(--text-muted); font-size: 0.82rem; margin-top: 8px;">
+          Computed from fundamental mathematical expansions.
+        </p>
+      </div>
+    `;
+  }
+}
+
+// Keyboard shortcuts support
+document.addEventListener('keydown', (e) => {
+  if (e.key >= '0' && e.key <= '9') insertNum(e.key);
+  else if (e.key === '.') insertNum('.');
+  else if (e.key === '+') insertOp('+');
+  else if (e.key === '-') insertOp('-');
+  else if (e.key === '*') insertOp('*');
+  else if (e.key === '/') { e.preventDefault(); insertOp('/'); }
+  else if (e.key === '^') insertOp('^');
+  else if (e.key === '(') insertSymbol('(');
+  else if (e.key === ')') insertSymbol(')');
+  else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); computeResult(); }
+  else if (e.key === 'Backspace') { e.preventDefault(); backspace(); }
+  else if (e.key === 'Escape') { e.preventDefault(); clearAll(); }
+});
+</script>
+
+</body>
+</html>
