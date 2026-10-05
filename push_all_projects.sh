@@ -19,6 +19,7 @@ PROJECTS=(
   "vietnam_cinematic:vietnam-cinematic"
   "the_world_explained:the-world-explained"
   "global_arbitrage_nri:global-arbitrage-nri"
+  "drongo_wildlife:drongo-wildlife"
 )
 
 SUCCESS_COUNT=0

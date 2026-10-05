@@ -41,3 +41,14 @@
 - **Summary:**
   - Registered autonomous subproject `global_arbitrage_nri` (repo: `global-arbitrage-nri`)
   - Updated workspace `.gitignore`, `push_all_projects.sh`, and `GEMINI.md` registry
+
+## [v1.3.0] - 2026-10-06
+- **Commit:** Pending Commit (Signed)
+- **Author:** saltymother <saltymother@users.noreply.github.com>
+- **Type:** Feature | Subproject Registry Synchrony
+- **Status:** Deployed & Verified
+- **GitHub Pages:** https://saltymother.github.io/scientific-calculator/
+- **Summary:**
+  - Registered autonomous subproject `drongo_wildlife` (repo: `drongo-wildlife`)
+  - Updated workspace `.gitignore`, `push_all_projects.sh`, and `GEMINI.md` registry
+  - Production deployment of DRONGO editorial photography platform at https://saltymother.github.io/drongo-wildlife/

@@ -183,6 +183,7 @@ For the "Verified" badge to show on GitHub:
 | `vietnam_cinematic/` | `vietnam-cinematic` | https://saltymother.github.io/vietnam-cinematic/ |
 | `the_world_explained/` | `the-world-explained` | https://saltymother.github.io/the-world-explained/ |
 | `global_arbitrage_nri/` | `global-arbitrage-nri` | https://saltymother.github.io/global-arbitrage-nri/ |
+| `drongo_wildlife/` | `drongo-wildlife` | https://saltymother.github.io/drongo-wildlife/ |
 | Root (`/`) | `scientific-calculator` | https://saltymother.github.io/scientific-calculator/ |
 
 ---
