@@ -31,3 +31,13 @@
   - Built unified Antigravity Project Ecosystem footer navigation linking all 9 interactive web applications.
   - Resolved relative redirect in `history.html` targeting the live Chronicles of Bharatavarsha application.
   - Added verified GitHub Pages live demo badge and production URL to README.md.
+
+## [v1.2.0] - 2026-10-05
+- **Commit:** Pending Commit (Signed)
+- **Author:** saltymother <saltymother@users.noreply.github.com>
+- **Type:** Feature | Subproject Registry Synchrony
+- **Status:** Deployed & Verified
+- **GitHub Pages:** https://saltymother.github.io/scientific-calculator/
+- **Summary:**
+  - Registered autonomous subproject `global_arbitrage_nri` (repo: `global-arbitrage-nri`)
+  - Updated workspace `.gitignore`, `push_all_projects.sh`, and `GEMINI.md` registry

@@ -17,6 +17,8 @@ PROJECTS=(
   "history_chronicles:chronicles-of-bharatavarsha"
   "shinigami_the_golden_pot:shinigami-the-golden-pot"
   "vietnam_cinematic:vietnam-cinematic"
+  "the_world_explained:the-world-explained"
+  "global_arbitrage_nri:global-arbitrage-nri"
 )
 
 SUCCESS_COUNT=0

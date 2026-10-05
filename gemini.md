@@ -181,6 +181,8 @@ For the "Verified" badge to show on GitHub:
 | `history_chronicles/` | `chronicles-of-bharatavarsha` | https://saltymother.github.io/chronicles-of-bharatavarsha/ |
 | `shinigami_the_golden_pot/` | `shinigami-the-golden-pot` | https://saltymother.github.io/shinigami-the-golden-pot/ |
 | `vietnam_cinematic/` | `vietnam-cinematic` | https://saltymother.github.io/vietnam-cinematic/ |
+| `the_world_explained/` | `the-world-explained` | https://saltymother.github.io/the-world-explained/ |
+| `global_arbitrage_nri/` | `global-arbitrage-nri` | https://saltymother.github.io/global-arbitrage-nri/ |
 | Root (`/`) | `scientific-calculator` | https://saltymother.github.io/scientific-calculator/ |
 
 ---
